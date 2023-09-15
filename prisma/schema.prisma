@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Users {
+  id         Int        @id @default(autoincrement())
+  name       String
+  email      String
+  password   String
+  group_id   Int
+  group      UserGroup  @relation(fields: [group_id], references: [id])
+  created_at DateTime   @default(now())
+  is_active  Boolean    @default(true)
+  Sessions   Sessions[]
+
+  @@map("users")
+}
+
+model UserGroup {
+  id          Int           @id @default(autoincrement())
+  name        String
+  Users       Users[]
+  Permissions Permissions[]
+
+  @@map("user_groups")
+}
+
+model Permissions {
+  id       Int       @id @default(autoincrement())
+  route    String
+  create   Boolean   @default(false)
+  read     Boolean   @default(false)
+  update   Boolean   @default(false)
+  delete   Boolean   @default(false)
+  group_id Int
+  group    UserGroup @relation(fields: [group_id], references: [id])
+
+  @@map("permissions")
+}
+
+model Sessions {
+  id         String   @id @default(uuid())
+  user_id    Int
+  user       Users    @relation(fields: [user_id], references: [id])
+  created_at DateTime @default(now())
+  expires_at DateTime
+  jwt_token  String
+  is_valid   Boolean  @default(true)
+
+  @@map("sessions")
+}
+
+model Clients {
+  id            Int           @id @default(autoincrement())
+  name          String
+  cgc           String?
+  company       String?
+  phone         String?
+  email         String?
+  street        String?
+  street_number String?
+  neighbourhood String?
+  city          String?
+  state         String?
+  country       String?
+  postal_code   String?
+  discount_id   Int
+  discount      DiscountTable @relation(fields: [discount_id], references: [id])
+  Sales         Sales[]
+
+  @@map("clients")
+}
+
+model DiscountTable {
+  id              Int       @id @default(autoincrement())
+  name            String?
+  discountPercent Float
+  Clients         Clients[]
+
+  @@map("discount_table")
+}
+
+model Forms {
+  id           Int            @id @default(autoincrement())
+  name         String
+  description  String?
+  sides        Int?
+  imagePath    String?
+  SaleProducts SaleProducts[]
+
+  @@map("forms")
+}
+
+model ProductsTypes {
+  id              Int    @id @default(autoincrement())
+  name            String
+  default_percent Float
+
+  @@map("product_type")
+}
+
+model Products {
+  id             String           @unique
+  name           String
+  description    String?
+  cost           Float
+  final_value    Float
+  created_at     DateTime         @default(now())
+  ProductStorage ProductStorage[]
+
+  @@id([id])
+  @@map("products")
+}
+
+model Sales {
+  id        Int     @id @default(autoincrement())
+  client_id Int
+  client    Clients @relation(fields: [client_id], references: [id])
+
+  @@map("sales")
+}
+
+model SaleProducts {
+  id      Int   @id @default(autoincrement())
+  form_id Int
+  form    Forms @relation(fields: [form_id], references: [id])
+
+  @@map("sale_products")
+}
+
+model ProductStorage {
+  id          Int       @id @default(autoincrement())
+  product_id  String
+  product     Products  @relation(fields: [product_id], references: [id])
+  quantity    Int?
+  cost        Float
+  final_value Float
+  begin_date  DateTime  @default(now())
+  end_date    DateTime?
+
+  @@map("product_storge")
+}
